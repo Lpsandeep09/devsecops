@@ -7,6 +7,28 @@ pipeline {
               sh "mvn clean package -DskipTests=true"
               archive 'target/*.jar' //so that they can be downloaded later
             }
-        }   
-    }
-}
+        } 
+
+       stage('unit testing') {
+            steps {
+              sh"mvn test"
+            }
+       }
+       post {
+        always {
+          junit 'target/surefire-reports/*.xml'
+          jacoco-execPattern: 'target/jacoco.exec'
+        }
+       }
+      stage('Docker build and push') {
+            steps {
+                sh('print env')
+                sh('docker build -t lpsandeep09/numeric-app:""$GIT_COMMIT"" . ')
+                sh('docker push lpsandeep09/numeric-app:""$GIT_COMMIT""')
+             }
+           }   
+        }
+      }
+
+
+
