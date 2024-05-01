@@ -22,13 +22,22 @@ pipeline {
        }
       stage('Docker build and push') {
             steps {
+              withDocker registry([credentialsID: "docker-hub", url: ""]){
                 sh('print env')
                 sh('docker build -t lpsandeep09/numeric-app:""$GIT_COMMIT"" . ')
                 sh('docker push lpsandeep09/numeric-app:""$GIT_COMMIT""')
-             }
-           }   
         }
       }
+    }
+      stage('Kubernetes Deployment - Dev') {
+            steps {
+              withKubeConfig([credentialsID: 'kubeconfig']){
+              sh "sed -i 's#replace#lpsandeep09/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
+              sh "kubectl -f apply k8s_deployment_service.yaml"  
+              }
+    }              
+  }
+}
 
 
 
